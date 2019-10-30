@@ -146,8 +146,11 @@ void waybar::Bar::onMap(GdkEventAny* ev) {
   surface = gdk_wayland_window_get_wl_surface(gdk_window);
 
   auto client = waybar::Client::inst();
-  auto layer =
-      config["layer"] == "top" ? ZWLR_LAYER_SHELL_V1_LAYER_TOP : ZWLR_LAYER_SHELL_V1_LAYER_BOTTOM;
+  int layer =
+    config["layer"] == "bottom" ? ZWLR_LAYER_SHELL_V1_LAYER_BOTTOM : ZWLR_LAYER_SHELL_V1_LAYER_TOP;
+  if (config["layer"] == "overlay")
+    layer |= ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY;
+
   layer_surface = zwlr_layer_shell_v1_get_layer_surface(
       client->layer_shell, surface, output->output, layer, "waybar");
 
@@ -170,7 +173,7 @@ void waybar::Bar::onMap(GdkEventAny* ev) {
 
 void waybar::Bar::setExclusiveZone(uint32_t width, uint32_t height) {
   auto zone = 0;
-  if (visible) {
+  if (visible && config["layer"] != "overlay") {
     // exclusive zone already includes margin for anchored edge,
     // only opposite margin should be added
     if (vertical) {
